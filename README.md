@@ -1,4 +1,4 @@
-##Microsoft SQL Server ODBC Driver 1.0 for Linux Fixed Install Scripts
+Microsoft SQL Server ODBC Driver 1.0 for Linux Fixed Install Scripts
 ======================================================================
 
 I named this repository in hopes that SEO would help it out a bit. One
