@@ -639,14 +639,21 @@ function create_symlinks
             if [ -h /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 ]; then
                 rm /usr/lib/x86_64-linux-gnu/libodbcinst.so.1;
             fi
+            if [ -h /usr/lib/x86_64-linux-gnu/libodbc.so.1 ]; then
+                rm /usr/lib/x86_64-linux-gnu/libodbc.so.1;
+            fi
         fi
         ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/x86_64-linux-gnu/libcrypto.so.10 >> $log_file 2>&1;
         ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/x86_64-linux-gnu/libssl.so.10 >> $log_file 2>&1;
         if [ -f /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 ]; then
-            log "creating libodbcinst.so symlink"
             ln -s /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
         else
-            log "proper libodbcinst.so not found. Will need to link manually"
+            log "proper libodbcinst.so not found. You will need to create the symlink manually"
+        fi
+        if [ -f /usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0 ]; then
+            ln -s /usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0 /usr/lib/x86_64-linux-gnu/libodbc.so.1 >> $log_file 2>&1;
+        else
+            log "proper libodbc.so not found. You will need to create the symlink manually"
         fi
     elif [ $has_aptitude -eq 0 ] && [ "$os_id" != "Ubuntu" ]; then
         log "You need to create some symlinks manually. Use the following command to find out more:"
