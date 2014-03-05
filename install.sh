@@ -623,23 +623,23 @@ function create_symlinks
         done
     done
 	
-	#If Ubuntu 12.04 LTS we know exactly which symlinks we need
-	hash aptitude &> /dev/null
-    local has_aptitude=$?
-	local os_id=`lsb_release -si`
-	local os_release=`lsb_release -sr`
-    if [ $has_aptitude -eq 0 ] && [ $os_id -eq "Ubuntu" ] && [ $os_release -eq "12.04" ]; then
-		local lib_odbcinst_path="/usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0"
-		ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so.10 >> $log_file 2>&1;
-		ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/libssl.so.10 >> $log_file 2>&1;
-		if [ -f $lib_odbcinst_path ]; then
-			ln -s $lib_odbc_path /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
-		else
-			log "proper libodbcinst.so not found. Will need to link manually"
-		fi
-	elif [ $has_aptitude -eq 0 ] && [ $os_id -ne "Ubuntu" ]; then
-		log "You need to create some symlinks manually. Use the following command to find out more:"
-		log "ldd /opt/microsoft/sqlncli/lib64/libsqlncli-11.0.so.1790.0"
+    #If Ubuntu 12.04 LTS we know exactly which symlinks we need
+    hash aptitude &> /dev/null
+   	local has_aptitude=$?
+    local os_id=`lsb_release -si`;
+    local os_release=`lsb_release -sr`;
+    if [ $has_aptitude -eq 0 ] && [ "$os_id" == "Ubuntu" ] && [ "$os_release" == "12.04" ]; then
+        local lib_odbcinst_path="/usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0"
+        ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so.10 >> $log_file 2>&1;
+        ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/libssl.so.10 >> $log_file 2>&1;
+        if [ -f $lib_odbcinst_path ]; then
+            ln -s $lib_odbc_path /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
+        else
+            log "proper libodbcinst.so not found. Will need to link manually"
+        fi
+    elif [ $has_aptitude -eq 0 ] && [ "$os_id" != "Ubuntu" ]; then
+        log "You need to create some symlinks manually. Use the following command to find out more:"
+        log "ldd /opt/microsoft/sqlncli/lib64/libsqlncli-11.0.so.1790.0"
     fi
 
     return 0;
