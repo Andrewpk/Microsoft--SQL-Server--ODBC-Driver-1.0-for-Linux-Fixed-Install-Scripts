@@ -629,11 +629,22 @@ function create_symlinks
     local os_id=`lsb_release -si`;
     local os_release=`lsb_release -sr`;
     if [ $has_aptitude -eq 0 ] && [ "$os_id" == "Ubuntu" ] && [ "$os_release" == "12.04" ]; then
-        local lib_odbcinst_path="/usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0"
-        ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so.10 >> $log_file 2>&1;
-        ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/libssl.so.10 >> $log_file 2>&1;
-        if [ -f $lib_odbcinst_path ]; then
-            ln -s $lib_odbc_path /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
+        if [ $force -eq 1 ]; then
+            if [ -h /lib/x86_64-linux-gnu/libcrypto.so.10 ]; then
+                rm /lib/x86_64-linux-gnu/libcrypto.so.10;
+            fi
+            if [ -h /lib/x86_64-linux-gnu/libssl.so.10 ]; then
+                rm /lib/x86_64-linux-gnu/libssl.so.10;
+            fi
+            if [ -h /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 ]; then
+                rm /usr/lib/x86_64-linux-gnu/libodbcinst.so.1;
+            fi
+        fi
+        ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /lib/x86_64-linux-gnu/libcrypto.so.10 >> $log_file 2>&1;
+        ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /lib/x86_64-linux-gnu/libssl.so.10 >> $log_file 2>&1;
+        if [ -f /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 ]; then
+            log "creating libodbcinst.so symlink"
+            ln -s /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
         else
             log "proper libodbcinst.so not found. Will need to link manually"
         fi
