@@ -6,10 +6,10 @@
 debug=0
 
 # Strings listed here
-driver_name="Microsoft SQL Server ODBC Driver V1.0 for Linux";
-driver_version="11.0.1790.0"
-driver_dm_name="SQL Server Native Client 11.0"
-driver_short_name="sqlncli"
+driver_name="Microsoft ODBC Driver 11 for SQL Server";
+driver_version="11.0.2270.0"
+driver_dm_name="ODBC Driver 11 for SQL Server"
+driver_short_name="msodbcsql"
 
 
 # Requirements listed here
@@ -30,13 +30,13 @@ fi
 lang_id="en_US";
 
 # files to be copied by directory
-driver_file="libsqlncli-11.0.so.1790.0"
+driver_file="libmsodbcsql-11.0.so.2270.0"
 
 lib_files=( "lib64/$driver_file" )
 lib_perms=( 0755 )
 
-bin_files=( "bin/bcp-11.0.1790.0"
-            "bin/sqlcmd-11.0.1790.0" )
+bin_files=( "bin/bcp-11.0.2270.0"
+            "bin/sqlcmd-11.0.2270.0" )
 bin_sym=( bcp sqlcmd )
 bin_perms=( 0755 0755 )
 
@@ -47,14 +47,14 @@ rll_files=( "bin/bcp.rll"
             "bin/SQLCMD.rll"
             "bin/BatchParserGrammar.dfa"
             "bin/BatchParserGrammar.llr"
-            "lib64/sqlnclir11.rll" )
+            "lib64/msodbcsqlr11.rll" )
 rll_perms=( 0644 0644 0644 0644 0644 )
 
 doc_files=( "docs/en_US.tar.gz" )
 doc_perms='$(printf "0644 %.0s" {1..'${#doc_files[@]}'})'
 doc_perms=( $(eval "echo $doc_perms") )
 
-inc_files=( "include/sqlncli.h" )
+inc_files=( "include/msodbcsql.h" )
 inc_perms='$(printf "0644 %.0s" {1..'${#inc_files[@]}'})'
 inc_perms=( $(eval "echo $inc_perms") )
 
@@ -161,7 +161,7 @@ function print_usage()
     echo "  --bin-dir=<directory> - location to create symbolic links for bcp and sqlcmd utilities,"
     echo "      defaults to the /usr/bin directory"
     echo "  --lib-dir=<directory> - location to deposit the Microsoft SQL Server ODBC Driver for Linux,"
-    echo "      defaults to the /opt/microsoft/sqlncli/lib directory"
+    echo "      defaults to the /opt/microsoft/msodbcsql/lib directory"
     echo "  --force - continues installation even if an error occurs"
     echo "  --accept-license - forgoes showing the EULA and implies agreement with its contents"
     echo
@@ -657,7 +657,7 @@ function create_symlinks
         fi
     elif [ $has_aptitude -eq 0 ] && [ "$os_id" != "Ubuntu" ]; then
         log "You need to create some symlinks manually. Use the following command to find out more:"
-        log "ldd /opt/microsoft/sqlncli/lib64/libsqlncli-11.0.so.1790.0"
+        log "ldd /opt/microsoft/msodbcsql/lib64/libmsodbcsql-11.0.so.2270.0"
     fi
 
     return 0;
