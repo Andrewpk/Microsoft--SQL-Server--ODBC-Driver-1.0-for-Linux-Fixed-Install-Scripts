@@ -18,7 +18,7 @@ scripts when so little work is necessary to support so much more of
 your audience.
 
 These are just some adjusted scripts to work on Debian/Ubuntu servers.
-These are tested working on Ubuntu 12.04 LTS - and they're supposed to
+These are tested working on Ubuntu 12.04 and 14.04 LTS - and they're supposed to
  work out of the box on Red Hat Enterprise Linux 6 though I do not 
 have access to an actual Red Hat Enterprise Linux 6 system so I've not 
 100% tested their stated functionality. Running on
@@ -26,7 +26,7 @@ have access to an actual Red Hat Enterprise Linux 6 system so I've not
  needed to change to bash in order to support the array syntax used.
  
 `install_dm.sh` is adjusted to pull [unixODBC](http://www.unixodbc.org/)
- version 2.3.2 from the web.
+ version 2.3.2 from the web. Once the driver is installed, don't forget to enable Multiple Active Result-sets (MARS) in your ODBC connection as that's a great feature that this driver provides. `MARS_Connection = Yes`
 
 
 ##Usage
@@ -46,7 +46,7 @@ $ sudo ./build_dm.sh --download-url=file:///home/MYUSER/unixODBC-2.3.2.tar.gz --
 
 ###SQL Server ODBC Driver Installer - install.sh
 
-For the driver installer - `install.sh` - `install`, `verify`, and `--help`
+For the driver installer - `install.sh` - `install`, `verify`, `--force`, and `--help`
  are available parameters:
 
 ```
