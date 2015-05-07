@@ -69,7 +69,7 @@ function echo_status_aligned
 # verify that the installation is on a 64 bit OS
 function check_for_Linux_x86_64 ()
 {
-    log "Verifying on a 64 bit Linux compatible OS"
+    log "Verifying if on a 64 bit Linux compatible OS"
 
     local proc=$(uname -p);
     if [ $proc != $req_proc ]; then
@@ -177,6 +177,7 @@ function configure_dm
 {
     log "Configuring"
 
+    # As per https://msdn.microsoft.com/en-US/library/hh568449(v=sql.110).aspx
     # we set this here rather than at the top to delay the eval of
     # the variables in the string
     local config_options=(
@@ -188,6 +189,7 @@ function configure_dm
                 "--libdir=$libdir"
                 "--prefix=$prefixdir"
                 "--sysconfdir=$sysconfdir"
+                "CPPFLAGS=-DSIZEOF_LONG_INT=8"
                )
 
     $(cd $tmp/$dm_dir >> $log_file 2>&1; ./configure ${config_options[@]} >> $log_file 2>&1)
@@ -214,6 +216,20 @@ function make_dm
     return 0
 }
 
+function install_dm
+{
+  log "Installing"
+
+  $(cd $tmp/$dm_dir >> $log_file 2>&1 ; make install >> $log_file 2>&1)
+
+  if [ $? -ne 0 ]; then
+    log "Failed to make install $dm_name"
+    return 1
+  fi
+
+  return 0
+}
+
 function make_build_msg
 {
     dm_build_msg=(
@@ -225,17 +241,17 @@ function make_build_msg
         "Unpacking $dm_name"
         "Configuring $dm_name"
         "Building $dm_name"
+        "Installing $dm_name"
     )
 }
 
 function build
 {
-    local build_steps=( check_for_Linux_x86_64 check_wget check_tar check_make  download unpack configure_dm make_dm )
+    local build_steps=( check_for_Linux_x86_64 check_wget check_tar check_make  download unpack configure_dm make_dm install_dm )
         make_build_msg
-    local build_neutral=( "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED"
-        "NOT ATTEMPTED" "NOT ATTEMPTED" )
-    local build_success=( 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' )
-    local build_fail=( 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' )
+    local build_neutral=( "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" "NOT ATTEMPTED" )
+    local build_success=( 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' 'OK' )
+    local build_fail=( 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' 'FAILED' )
 
     # asserts for the arrays above
     if [ ${#build_steps[@]} -ne ${#dm_build_msg[@]} ]; then
@@ -291,10 +307,9 @@ function print_usage
 {
     echo "Usage: build_dm.sh [options]"
     echo
-    echo "This script downloads, configures, and builds $dm_name so that it is"
-    echo "ready to install for use with the $driver_name"
+    echo "This script downloads, configures, builds and installs $dm_name"
     echo
-    echo "Valid options are --help, --download-url, --prefix, --libdir, --sysconfdir"
+    echo "Valid options are --help, --download-url, --prefix, --libdir, --sysconfdir, --accept-warning"
     echo "  --help - prints this message"
     echo "  --download-url=url | file:// - Specify the location (and name) of unixODBC-2.3.0.tar.gz."
     echo "       For example, if unixODBC-2.3.0.tar.gz is in the current directory, specify "
@@ -302,6 +317,7 @@ function print_usage
     echo "  --prefix - directory to install $dm_package to."
     echo "  --libdir - directory where ODBC drivers will be placed"
     echo "  --sysconfdir - directory where $dm_name configuration files are placed"
+    echo "  --accept-warning - indicate that you have read and accept the warning to download the file"
     echo
 
     # prevent the script from continuing
@@ -346,7 +362,7 @@ function approve_download
 }
 
 echo
-echo "Build $dm_name script"
+echo "Build and Install $dm_name script"
 echo "Copyright Microsoft Corp."
 echo
 
@@ -363,7 +379,7 @@ do
             ;;
         --libdir=*)
             libdir=${1##--libdir=}
-            log "Drivers configured to be place at $libdir"
+            log "Drivers configured to be placed at $libdir"
             ;;
         --sysconfdir=*)
             sysconfdir=${1##--sysconfdir=}
@@ -384,6 +400,22 @@ do
     shift
 done
 
+echo "PLEASE NOTE THAT THIS WILL POTENTIALLY INSTALL THE NEW DRIVER MANAGER OVER ANY"
+echo "EXISTING UNIXODBC DRIVER MANAGER.  IF YOU HAVE ANOTHER COPY OF UNIXODBC INSTALLED,"
+echo "THIS MAY POTENTIALLY OVERWRITE THAT COPY."
+echo
+read -p "Would you like to proceed? (YES/NO): " accept
+echo
+
+if [ "$accept" == "YES" ]; then
+  log "Accepted overwrite warning."
+else
+  log "Declined overwrite warning."
+  echo "The script is now ending and no actions will be taken."
+  echo
+  exit 0
+fi
+
 if [ $warning_accepted -ne 1 ]; then
     approve_download
 fi
@@ -395,12 +427,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Build of the $dm_name complete."
-echo
-echo "Run the command 'cd $tmp/$dm_dir; make install' to install the driver manager."
-echo
-echo "PLEASE NOTE THAT THIS WILL POTENTIALLY INSTALL THE NEW DRIVER MANAGER OVER ANY"
-echo "EXISTING UNIXODBC DRIVER MANAGER.  IF YOU HAVE ANOTHER COPY OF UNIXODBC INSTALLED,"
-echo "THIS MAY POTENTIALLY OVERWRITE THAT COPY."
+echo "Successfully installed $dm_name. Please see $log_file for additional information."
 
 exit 0
