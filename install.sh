@@ -1,5 +1,5 @@
 #!/bin/bash
-# Microsoft SQL Server ODBC Driver V1.0 for Linux Installer
+# Microsoft ODBC Driver 11 for SQL Server Installer
 # Copyright Microsoft Corp.
 
 # Set to 1 for debugging information/convenience.
@@ -623,12 +623,12 @@ function create_symlinks
         done
     done
 	
-    #If Ubuntu 12.04 LTS we know exactly which symlinks we need
+    # This has been tested in Ubuntu 12.04 and 14.04 LTS
+    log "Creating symlinks needed in Ubuntu."
     hash aptitude &> /dev/null
    	local has_aptitude=$?
-    local os_id=`lsb_release -si`;
-    local os_release=`lsb_release -sr`;
-    if [ $has_aptitude -eq 0 ] && [ "$os_id" == "Ubuntu" ] && [ "$os_release" == "12.04" ]; then
+    local os_id=$(lsb_release -si);
+    if [ $has_aptitude -eq 0 ] && [ "$os_id" == "Ubuntu" ]; then
         if [ $force -eq 1 ]; then
             if [ -h /usr/lib/x86_64-linux-gnu/libcrypto.so.10 ]; then
                 rm /usr/lib/x86_64-linux-gnu/libcrypto.so.10;
@@ -655,9 +655,10 @@ function create_symlinks
         else
             log "proper libodbc.so not found. You will need to create the symlink manually"
         fi
-    elif [ $has_aptitude -eq 0 ] && [ "$os_id" != "Ubuntu" ]; then
+    else
+        SCRIPTPATH=$( cd "$(dirname "$0")" ; pwd -P )
         log "You need to create some symlinks manually. Use the following command to find out more:"
-        log "ldd /opt/microsoft/msodbcsql/lib64/libmsodbcsql-11.0.so.2270.0"
+        log "ldd $SCRIPTPATH/lib64/libmsodbcsql-11.0.so.2270.0"
     fi
 
     return 0;
