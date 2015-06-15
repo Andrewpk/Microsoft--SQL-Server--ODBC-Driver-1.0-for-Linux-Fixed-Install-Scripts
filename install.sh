@@ -214,7 +214,9 @@ function check_for_Linux_x86_64 ()
 {
     log "Verifying on a 64 bit Linux compatible OS"
     local proc=$(uname -p);
-    if [ $proc != $req_proc ]; then
+    local machine=$(uname -m);
+    # bash string bugs: http://www.tldp.org/LDP/abs/html/comparison-ops.html
+    if [[ "x$proc" != "x$req_proc" && "x$machine" != "x$req_proc" ]]; then
         log "This installation of the $driver_name may only be installed"
         log "on a 64 bit Linux compatible operating system."
         return 1;
@@ -228,6 +230,18 @@ function check_for_Linux_x86_64 ()
     fi
 
     return 0;
+}
+
+# verify required locale is present
+function check_required_locale
+{
+    log "Checking that required libraries are installed"
+    has_en_utf8_locale=$(locale -a | grep "en_US.utf8")
+    if [ -z ${has_en_utf8_locale} ]; then
+        log "The en_US.utf8 locale is required. Please add the locale to your system before continuing."
+        log "Adding locales can be as simple as 'sudo locale-gen en_US.utf8 && sudo dpkg-reconfigure locales'."
+        log "Please see your distribution's manual for more details regarding adding locales."
+        return 1;
 }
 
 # verify that the required libs are on the system
@@ -347,16 +361,17 @@ function verify_dm_config()
 function verify_config
 {
     local proc_os_okay="NOT CHECKED"
+    local locale_installed="NOT CHECKED"
     local libs_installed="NOT CHECKED"
     local odbc_config="NOT CHECKED"
     local already_installed="NOT CHECKED"
     local version_dm_okay="NOT CHECKED"
     local dm_config_okay="NOT CHECKED"
 
-    verify_steps=( check_for_Linux_x86_64 check_required_libs find_odbc_config verify_dm_version verify_dm_config is_already_installed )
-    verify_status_vars=( proc_os_okay libs_installed odbc_config version_dm_okay dm_config_okay already_installed )
-    verify_success=( 'OK' 'OK' 'OK' 'OK' 'OK*' 'NOT FOUND' )
-    verify_fail=( 'FAILED' 'NOT FOUND' 'FAILED' 'FAILED' 'FAILED' 'INSTALLED' )
+    verify_steps=( check_for_Linux_x86_64 check_required_locale check_required_libs find_odbc_config verify_dm_version verify_dm_config is_already_installed )
+    verify_status_vars=( proc_os_okay locale_installed libs_installed odbc_config version_dm_okay dm_config_okay already_installed )
+    verify_success=( 'OK' 'OK' 'OK' 'OK' 'OK' 'OK*' 'NOT FOUND' )
+    verify_fail=( 'FAILED' 'NOT FOUND' 'NOT FOUND' 'FAILED' 'FAILED' 'FAILED' 'INSTALLED' )
 
     if [ ${#verify_steps[@]} -ne ${#verify_status_vars[@]} ]; then
         echo "Error in verify script 1"
@@ -391,7 +406,7 @@ function verify_config
 
     done
 
-    report_config "$proc_os_okay" "$libs_installed" "$odbc_config" "$version_dm_okay" "$dm_config_okay" "$already_installed"
+    report_config "$proc_os_okay" "$locale_installed" "$libs_installed" "$odbc_config" "$version_dm_okay" "$dm_config_okay" "$already_installed"
 
     return $status
 }
