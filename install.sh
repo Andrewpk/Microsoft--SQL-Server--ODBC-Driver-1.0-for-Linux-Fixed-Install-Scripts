@@ -202,7 +202,7 @@ function format_status
 function report_config()
 {
     format_status "Checking for 64 bit Linux compatible OS" "$1"
-    format_status "Checking required libs are installed" "$2"
+    format_status "Checking required libs/locale(en_US.utf8) are installed" "$2"
     format_status "unixODBC utilities (odbc_config and odbcinst) installed" "$3"
     format_status "unixODBC Driver Manager version $req_dm_ver installed" "$4"
     format_status "unixODBC Driver Manager configuration correct" "$5"
@@ -242,6 +242,7 @@ function check_required_locale
         log "Adding locales can be as simple as 'sudo locale-gen en_US.utf8 && sudo dpkg-reconfigure locales'."
         log "Please see your distribution's manual for more details regarding adding locales."
         return 1;
+    fi
 }
 
 # verify that the required libs are on the system
