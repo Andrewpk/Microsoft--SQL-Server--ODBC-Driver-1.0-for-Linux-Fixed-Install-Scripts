@@ -46,11 +46,18 @@ $ sudo ./build_dm.sh --download-url=file:///home/MYUSER/unixODBC-2.3.2.tar.gz --
 
 ###SQL Server ODBC Driver Installer - install.sh
 
-For the driver installer - `install.sh` - `install`, `verify`, `--force`, and `--help`
+For the driver installer - `install.sh` - `install`, `verify`, `--force`, `--force-debian`, `--force-redhat`, and `--help`
  are available parameters:
 
 ```
 $ sudo ./install.sh install
+```
+
+If you are using a Debian based/compatible distribution that is not detected properly (the current list is Debian, 
+Ubuntu, and LinuxMint), you may want to use the `--force-debian` install flag like this:
+
+```
+$ sudo ./install.sh install --force-debian
 ```
 
 You can use verify to check the status of an existing installation:

@@ -18,12 +18,15 @@ req_proc="x86_64";
 req_dm_ver="2.3.2";
 dm_name="unixODBC $req_dm_ver";
 os_dist_id=`lsb_release -is`
+is_this_debian_based="/etc/debian_version"
 req_libs=""
+deb_req_libs=( '~i"^libc6$"' '~i"libkrb5\-[0-9]$"' '~i"^e2fsprogs$"' '~i"^openssl$"' )
+red_req_libs=( glibc e2fsprogs krb5-libs openssl )
 
-if [ $os_dist_id == "Ubuntu" ] || [ $os_dist_id == "Debian" ]; then
-    req_libs=( '~i"^libc6$"' '~i"libkrb5\-[0-9]$"' '~i"^e2fsprogs$"' '~i"^openssl$"' )
+if [ $os_dist_id == "Ubuntu" ] || [ $os_dist_id == "Debian" ] || [ $os_dist_id == "LinuxMint" ] || [ -e "$is_this_debian_based" ]; then
+    req_libs=deb_req_libs
 else
-    req_libs=( glibc e2fsprogs krb5-libs openssl )
+    req_libs=red_req_libs
 fi
 
 #language of the install
@@ -164,6 +167,8 @@ function print_usage()
     echo "      defaults to the /opt/microsoft/msodbcsql/lib directory"
     echo "  --force - continues installation even if an error occurs"
     echo "  --accept-license - forgoes showing the EULA and implies agreement with its contents"
+    echo "  --force-debian - forces the install to continue as a debian based/compatible linux distribution"
+    echo "  --force-redhat - forces the install to continue as a redhat based/compatible linux distribution"
     echo
 
     # don't return if we're printing the usage
@@ -695,6 +700,12 @@ function process_params
         case "$1" in
             --force)
                 force=1
+                ;;
+            --force-debian)
+                req_libs=deb_req_libs
+                ;;
+            --force-redhat)
+                req_libs=red_req_libs
                 ;;
             --bin-dir=*)
                 bin_sym_dir=${1##--bin-dir=}
