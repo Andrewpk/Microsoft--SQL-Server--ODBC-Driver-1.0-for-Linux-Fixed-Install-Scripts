@@ -24,9 +24,9 @@ deb_req_libs=( '~i"^libc6$"' '~i"libkrb5\-[0-9]$"' '~i"^e2fsprogs$"' '~i"^openss
 red_req_libs=( glibc e2fsprogs krb5-libs openssl )
 
 if [ $os_dist_id == "Ubuntu" ] || [ $os_dist_id == "Debian" ] || [ $os_dist_id == "LinuxMint" ] || [ -e "$is_this_debian_based" ]; then
-    req_libs=deb_req_libs
+    req_libs=$deb_req_libs
 else
-    req_libs=red_req_libs
+    req_libs=$red_req_libs
 fi
 
 #language of the install
