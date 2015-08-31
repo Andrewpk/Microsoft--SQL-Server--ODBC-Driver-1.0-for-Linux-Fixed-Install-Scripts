@@ -240,7 +240,7 @@ function check_for_Linux_x86_64 ()
 # verify required locale is present
 function check_required_locale
 {
-    log "Checking that required libraries are installed"
+    log "Checking that required locales are installed"
     has_en_utf8_locale=$(locale -a | grep "en_US.utf8")
     if [ -z ${has_en_utf8_locale} ]; then
         log "The en_US.utf8 locale is required. Please add the locale to your system before continuing."
@@ -263,8 +263,10 @@ function check_required_libs
         has_aptitude=$?
         local present=""
         if [ $has_rpm -eq 0 ]; then
+            log "Checking for $lib"
             present=$(rpm -q -a $lib) >> $log_file 2>&1
         elif [ $has_aptitude -eq 0 ]; then
+            log "Checking for $lib"
             present=$(aptitude search $lib ) >> $log_file 2>&1
         fi
         if [ "$present" == "" ]; then
