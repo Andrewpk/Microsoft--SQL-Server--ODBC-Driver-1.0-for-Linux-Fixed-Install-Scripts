@@ -71,7 +71,7 @@ function check_for_Linux_x86_64 ()
 {
     log "Verifying if on a 64 bit Linux compatible OS"
 
-    local proc=$(uname -p);
+    local proc=$(uname -m);
     if [ $proc != $req_proc ]; then
         log "This installation of the" $dm_name "may only be installed"
         log "on a 64 bit Linux compatible operating system."
@@ -430,3 +430,4 @@ fi
 echo "Successfully installed $dm_name. Please see $log_file for additional information."
 
 exit 0
+

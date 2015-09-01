@@ -19,14 +19,25 @@ req_dm_ver="2.3.2";
 dm_name="unixODBC $req_dm_ver";
 os_dist_id=`lsb_release -is`
 is_this_debian_based="/etc/debian_version"
+
 req_libs=""
+real_deb_req_libs=( "libc6" "libkrb5-3" "e2fsprogs" "openssl" )
+
+#this should get renamed to ubuntu_req_libs or something 
 deb_req_libs=( '~i"^libc6$"' '~i"libkrb5\-[0-9]$"' '~i"^e2fsprogs$"' '~i"^openssl$"' )
+
 red_req_libs=( glibc e2fsprogs krb5-libs openssl )
 
 if [ $os_dist_id == "Ubuntu" ] || [ $os_dist_id == "Debian" ] || [ $os_dist_id == "LinuxMint" ] || [ -e "$is_this_debian_based" ]; then
-    req_libs=$deb_req_libs
+    hash aptitude &> /dev/null
+    has_aptitude=$?
+    if [ $os_dist_id == "Ubuntu" ] || [ $os_dist_id == "LinuxMint" ] || [ $has_aptitude -eq 0 ]; then
+        req_libs=("${deb_req_libs[@]}")
+    else
+        req_libs=("${real_deb_req_libs[@]}")
+    fi
 else
-    req_libs=$red_req_libs
+    req_libs=("${red_req_libs[@]}")
 fi
 
 #language of the install
@@ -168,6 +179,7 @@ function print_usage()
     echo "  --force - continues installation even if an error occurs"
     echo "  --accept-license - forgoes showing the EULA and implies agreement with its contents"
     echo "  --force-debian - forces the install to continue as a debian based/compatible linux distribution"
+    echo "  --force-ubuntu - forces the install to continue as a ubuntu based/compatible linux distribution"
     echo "  --force-redhat - forces the install to continue as a redhat based/compatible linux distribution"
     echo
 
@@ -218,10 +230,9 @@ function report_config()
 function check_for_Linux_x86_64 ()
 {
     log "Verifying on a 64 bit Linux compatible OS"
-    local proc=$(uname -p);
-    local machine=$(uname -m);
+    local proc=$(uname -m);
     # bash string bugs: http://www.tldp.org/LDP/abs/html/comparison-ops.html
-    if [[ "x$proc" != "x$req_proc" && "x$machine" != "x$req_proc" ]]; then
+    if [[ "x$proc" != "x$req_proc" ]]; then
         log "This installation of the $driver_name may only be installed"
         log "on a 64 bit Linux compatible operating system."
         return 1;
@@ -261,6 +272,8 @@ function check_required_libs
         has_rpm=$?
         hash aptitude &> /dev/null
         has_aptitude=$?
+        hash dpkg &> /dev/null
+        has_dpkg=$?
         local present=""
         if [ $has_rpm -eq 0 ]; then
             log "Checking for $lib"
@@ -268,6 +281,8 @@ function check_required_libs
         elif [ $has_aptitude -eq 0 ]; then
             log "Checking for $lib"
             present=$(aptitude search $lib ) >> $log_file 2>&1
+        elif [ $has_dpkg -eq 0 ]; then
+            present=$(dpkg --get-selections $lib ) >> $log_file 2>&1
         fi
         if [ "$present" == "" ]; then
             log "The $lib library was not found installed in the RPM database."
@@ -650,7 +665,11 @@ function create_symlinks
     log "Creating symlinks needed in Ubuntu."
     hash aptitude &> /dev/null
    	local has_aptitude=$?
+    hash dpkg &> /dev/null
+    local has_dpkg=$?
+    local deb_os_id=$(cat /etc/debian_version);
     local os_id=$(lsb_release -si);
+
     if [ $has_aptitude -eq 0 ] && [ "$os_id" == "Ubuntu" ]; then
         if [ $force -eq 1 ]; then
             if [ -h /usr/lib/x86_64-linux-gnu/libcrypto.so.10 ]; then
@@ -668,6 +687,33 @@ function create_symlinks
         fi
         ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/x86_64-linux-gnu/libcrypto.so.10 >> $log_file 2>&1;
         ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/x86_64-linux-gnu/libssl.so.10 >> $log_file 2>&1;
+        if [ -f /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 ]; then
+            ln -s /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
+        else
+            log "proper libodbcinst.so not found. You will need to create the symlink manually"
+        fi
+        if [ -f /usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0 ]; then
+            ln -s /usr/lib/x86_64-linux-gnu/libodbc.so.2.0.0 /usr/lib/x86_64-linux-gnu/libodbc.so.1 >> $log_file 2>&1;
+        else
+            log "proper libodbc.so not found. You will need to create the symlink manually"
+        fi
+    elif [ $has_dpkg -eq 0 ] && [ "$deb_os_id" == "8.1" ] ; then
+        if [ $force -eq 1 ]; then
+            if [ -h /usr/lib/x86_64-linux-gnu/libcrypto.so.10 ]; then
+                rm /usr/lib/x86_64-linux-gnu/libcrypto.so.10;
+            fi
+            if [ -h /usr/lib/x86_64-linux-gnu/libssl.so.10 ]; then
+                rm /usr/lib/x86_64-linux-gnu/libssl.so.10;
+            fi
+            if [ -h /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 ]; then
+                rm /usr/lib/x86_64-linux-gnu/libodbcinst.so.1;
+            fi
+            if [ -h /usr/lib/x86_64-linux-gnu/libodbc.so.1 ]; then
+                rm /usr/lib/x86_64-linux-gnu/libodbc.so.1;
+            fi
+        fi
+        ln -s /usr/lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/x86_64-linux-gnu/libcrypto.so.10 >> $log_file 2>&1;
+        ln -s /usr/lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/x86_64-linux-gnu/libssl.so.10 >> $log_file 2>&1;
         if [ -f /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 ]; then
             ln -s /usr/lib/x86_64-linux-gnu/libodbcinst.so.2.0.0 /usr/lib/x86_64-linux-gnu/libodbcinst.so.1 >> $log_file 2>&1;
         else
@@ -703,11 +749,14 @@ function process_params
             --force)
                 force=1
                 ;;
+            --force-ubuntu)
+                req_libs=("${deb_req_libs[@]}")
+                ;;
             --force-debian)
-                req_libs=deb_req_libs
+                req_libs=("${real_deb_req_libs[@]}")
                 ;;
             --force-redhat)
-                req_libs=red_req_libs
+                req_libs=("${red_req_libs[@]}")
                 ;;
             --bin-dir=*)
                 bin_sym_dir=${1##--bin-dir=}
