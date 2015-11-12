@@ -94,7 +94,7 @@ function check_wget
     log "Checking that wget is installed"
 
     # if using a file url, wget is not necessary
-    if [ "${dm_url##file://}" == "$dm_url" ]; then
+    if [ "${dm_url##file://}" != "$dm_url" ]; then
         return 0;
     fi
 
